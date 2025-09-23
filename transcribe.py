@@ -33,13 +33,24 @@ def check_dependencies():
     return True
 
 def check_gpu():
-    """Check if CUDA is available for GPU acceleration"""
+    """Check if CUDA is available and properly configured"""
     try:
         import torch
         if torch.cuda.is_available():
             gpu_name = torch.cuda.get_device_name(0)
             print(f"✓ GPU detected: {gpu_name}")
-            return "cuda"
+
+            # Test a simple GPU operation to check if CUDA toolkit is properly installed
+            try:
+                test_tensor = torch.randn(10, 10).cuda()
+                _ = test_tensor @ test_tensor
+                print("✓ CUDA toolkit working properly")
+                return "cuda"
+            except Exception as e:
+                print("⚠ GPU detected but CUDA toolkit issues found")
+                print("ℹ Falling back to CPU for better performance")
+                print(f"  (Install NVIDIA CUDA Toolkit to fix: {str(e)[:100]}...)")
+                return "cpu"
         else:
             print("⚠ GPU not detected, using CPU")
             return "cpu"
@@ -118,7 +129,7 @@ def transcribe_file(file_path):
                 str(file_path),
                 language="yue",  # Cantonese language code
                 word_timestamps=True,
-                verbose=False,
+                verbose=True,  # Show real-time transcription
                 task="transcribe",
                 condition_on_previous_text=False,  # Preserve colloquial expressions
                 temperature=0.0,  # Consistent output
@@ -129,7 +140,7 @@ def transcribe_file(file_path):
                 str(file_path),
                 language=None,  # Auto-detect for best preservation
                 word_timestamps=True,
-                verbose=False,
+                verbose=True,  # Show real-time transcription
                 task="transcribe",
                 condition_on_previous_text=False,
                 temperature=0.0,
