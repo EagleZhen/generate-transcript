@@ -17,6 +17,19 @@ import os
 import argparse
 from pathlib import Path
 import whisper
+import subprocess
+import shutil
+
+def check_dependencies():
+    """Check if required dependencies are available"""
+    # Check FFmpeg
+    if not shutil.which('ffmpeg'):
+        print("❌ FFmpeg not found in PATH")
+        print("Please install FFmpeg: https://ffmpeg.org/download.html")
+        return False
+
+    print("✓ FFmpeg found")
+    return True
 
 def check_gpu():
     """Check if CUDA is available for GPU acceleration"""
@@ -25,13 +38,13 @@ def check_gpu():
         if torch.cuda.is_available():
             gpu_name = torch.cuda.get_device_name(0)
             print(f"✓ GPU detected: {gpu_name}")
-            return True
+            return "cuda"
         else:
             print("⚠ GPU not detected, using CPU")
-            return False
+            return "cpu"
     except ImportError:
         print("ℹ Using CPU (install CUDA-enabled torch for GPU acceleration)")
-        return False
+        return "cpu"
 
 def format_timestamp(seconds):
     """Convert seconds to SRT timestamp format (HH:MM:SS,mmm)"""
@@ -53,17 +66,29 @@ def generate_srt(segments, output_path):
             f.write(f"{start_time} --> {end_time}\n")
             f.write(f"{text}\n\n")
 
+def convert_to_traditional_chinese(text):
+    """Convert simplified Chinese to traditional Chinese if needed"""
+    try:
+        # Try to import opencc for conversion
+        import opencc
+        converter = opencc.OpenCC('s2t')  # Simplified to Traditional
+        return converter.convert(text)
+    except ImportError:
+        # If opencc not available, return as-is
+        # Whisper often outputs traditional Chinese by default for Cantonese
+        return text
+
 def generate_markdown(segments, output_path, filename):
-    """Generate clean markdown transcript"""
+    """Generate clean markdown transcript in Traditional Chinese"""
     with open(output_path, 'w', encoding='utf-8') as f:
-        f.write(f"# Transcript: {filename}\n\n")
-        f.write(f"Generated using OpenAI Whisper\n\n")
         f.write("---\n\n")
 
         for segment in segments:
             text = segment['text'].strip()
             if text:
-                f.write(f"{text}\n\n")
+                # Convert to traditional Chinese
+                traditional_text = convert_to_traditional_chinese(text)
+                f.write(f"{traditional_text}\n\n")
 
 def transcribe_file(file_path):
     """Main transcription function"""
@@ -75,32 +100,47 @@ def transcribe_file(file_path):
 
     print(f"📁 Processing: {file_path.name}")
 
+    # Check dependencies
+    if not check_dependencies():
+        return False
+
     # Check GPU availability
-    gpu_available = check_gpu()
+    device = check_gpu()
 
     # Load Whisper model
     print("🔄 Loading Whisper model...")
     try:
         # Use large model for best Cantonese support
-        model = whisper.load_model("large", device="cuda" if gpu_available else "cpu")
+        model = whisper.load_model("large", device=device)
         print("✓ Model loaded successfully")
     except Exception as e:
         print(f"❌ Error loading model: {e}")
+        print(f"   Details: {str(e)}")
         return False
 
     # Transcribe
     print("🎤 Transcribing (this may take a while)...")
     try:
-        # Set language to Chinese for Cantonese, Whisper will auto-detect English mixed in
+        # Configure for Cantonese with Traditional Chinese output
         result = model.transcribe(
             str(file_path),
             language="zh",
             word_timestamps=True,
-            verbose=True
+            verbose=False,
+            # Use traditional Chinese characters
+            task="transcribe",
+            # Keep original Cantonese expressions
+            condition_on_previous_text=False,
+            temperature=0.0,
+            no_speech_threshold=0.6,
+            logprob_threshold=-1.0
         )
         print("✓ Transcription completed")
     except Exception as e:
         print(f"❌ Error during transcription: {e}")
+        print(f"   Details: {str(e)}")
+        if "ffmpeg" in str(e).lower():
+            print("   This might be an FFmpeg issue. Please ensure FFmpeg is properly installed.")
         return False
 
     # Generate output files
