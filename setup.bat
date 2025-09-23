@@ -31,11 +31,16 @@ if %errorlevel% == 0 (
 ) else (
     echo Installing CUDA Toolkit via winget...
     winget install Nvidia.CUDA
-    if %errorlevel% neq 0 (
+    echo Verifying CUDA installation...
+    nvcc --version >nul 2>&1
+    if %errorlevel% == 0 (
+        echo CUDA Toolkit installation successful
+        nvcc --version
+    ) else (
         echo.
-        echo Failed to install CUDA Toolkit via winget
+        echo CUDA Toolkit installation may have failed
         echo Please manually install from: https://developer.nvidia.com/cuda-downloads
-        echo Choose CUDA 11.8 for compatibility with PyTorch
+        echo Note: CUDA 13.0+ should work with current PyTorch
         echo.
     )
 )
