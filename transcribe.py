@@ -10,6 +10,7 @@ Outputs:
 Requirements:
 - pip install openai-whisper
 - FFmpeg installed and in PATH (for video files)
+- CUDA-enabled PyTorch for GPU acceleration (optional but recommended)
 """
 
 import sys
@@ -66,29 +67,17 @@ def generate_srt(segments, output_path):
             f.write(f"{start_time} --> {end_time}\n")
             f.write(f"{text}\n\n")
 
-def convert_to_traditional_chinese(text):
-    """Convert simplified Chinese to traditional Chinese if needed"""
-    try:
-        # Try to import opencc for conversion
-        import opencc
-        converter = opencc.OpenCC('s2t')  # Simplified to Traditional
-        return converter.convert(text)
-    except ImportError:
-        # If opencc not available, return as-is
-        # Whisper often outputs traditional Chinese by default for Cantonese
-        return text
-
 def generate_markdown(segments, output_path, filename):
-    """Generate clean markdown transcript in Traditional Chinese"""
+    """Generate clean markdown transcript preserving original Cantonese expressions"""
     with open(output_path, 'w', encoding='utf-8') as f:
+        f.write(f"# 逐字稿：{filename}\n\n")
         f.write("---\n\n")
 
         for segment in segments:
             text = segment['text'].strip()
             if text:
-                # Convert to traditional Chinese
-                traditional_text = convert_to_traditional_chinese(text)
-                f.write(f"{traditional_text}\n\n")
+                # Keep original Whisper output to preserve Cantonese expressions
+                f.write(f"{text}\n\n")
 
 def transcribe_file(file_path):
     """Main transcription function"""
@@ -121,20 +110,30 @@ def transcribe_file(file_path):
     # Transcribe
     print("🎤 Transcribing (this may take a while)...")
     try:
-        # Configure for Cantonese with Traditional Chinese output
-        result = model.transcribe(
-            str(file_path),
-            language="zh",
-            word_timestamps=True,
-            verbose=False,
-            # Use traditional Chinese characters
-            task="transcribe",
-            # Keep original Cantonese expressions
-            condition_on_previous_text=False,
-            temperature=0.0,
-            no_speech_threshold=0.6,
-            logprob_threshold=-1.0
-        )
+        # Configure for authentic Cantonese transcription
+        # Try Cantonese-specific language code first, fall back to auto-detect
+        try:
+            print("📍 Trying Cantonese-specific transcription...")
+            result = model.transcribe(
+                str(file_path),
+                language="yue",  # Cantonese language code
+                word_timestamps=True,
+                verbose=False,
+                task="transcribe",
+                condition_on_previous_text=False,  # Preserve colloquial expressions
+                temperature=0.0,  # Consistent output
+            )
+        except Exception as e:
+            print("⚠ Cantonese mode failed, using auto-detection...")
+            result = model.transcribe(
+                str(file_path),
+                language=None,  # Auto-detect for best preservation
+                word_timestamps=True,
+                verbose=False,
+                task="transcribe",
+                condition_on_previous_text=False,
+                temperature=0.0,
+            )
         print("✓ Transcription completed")
     except Exception as e:
         print(f"❌ Error during transcription: {e}")
