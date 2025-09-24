@@ -104,8 +104,9 @@ def transcribe_file(file_path):
     if not check_dependencies():
         return False
 
-    # Check GPU availability
-    device = check_gpu()
+    # Force CPU mode for stability
+    print("ℹ Using CPU mode for optimal stability")
+    device = "cpu"
 
     # Load Whisper model
     print("🔄 Loading Whisper model...")
@@ -123,28 +124,21 @@ def transcribe_file(file_path):
     try:
         # Configure for authentic Cantonese transcription
         # Try Cantonese-specific language code first, fall back to auto-detect
-        try:
-            print("📍 Trying Cantonese-specific transcription...")
-            result = model.transcribe(
-                str(file_path),
-                language="yue",  # Cantonese language code
-                word_timestamps=True,
-                verbose=True,  # Show real-time transcription
-                task="transcribe",
-                condition_on_previous_text=False,  # Preserve colloquial expressions
-                temperature=0.0,  # Consistent output
-            )
-        except Exception as e:
-            print("⚠ Cantonese mode failed, using auto-detection...")
-            result = model.transcribe(
-                str(file_path),
-                language=None,  # Auto-detect for best preservation
-                word_timestamps=True,
-                verbose=True,  # Show real-time transcription
-                task="transcribe",
-                condition_on_previous_text=False,
-                temperature=0.0,
-            )
+        # Optimized settings for mixed Cantonese/English
+        print("📍 Starting optimized Cantonese transcription...")
+        result = model.transcribe(
+            str(file_path),
+            language="zh",  # Chinese (works better than yue for mixed content)
+            word_timestamps=True,
+            verbose=True,  # Show real-time transcription
+            task="transcribe",
+            condition_on_previous_text=False,  # Preserve colloquial expressions
+            temperature=0.0,  # Consistent output
+            compression_ratio_threshold=2.4,  # Detect repetitive content
+            logprob_threshold=-1.0,  # Accept lower confidence for colloquial speech
+            no_speech_threshold=0.6,  # Adjust silence detection
+            initial_prompt="廣東話 Cantonese meeting transcript",  # Guide the model
+        )
         print("✓ Transcription completed")
     except Exception as e:
         print(f"❌ Error during transcription: {e}")
