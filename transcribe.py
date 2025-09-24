@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Whisper Transcription Script
+Whisper Transcription Script (CPU Version)
 Drag and drop audio/video files onto this script to generate transcripts.
 
 Outputs:
@@ -10,7 +10,9 @@ Outputs:
 Requirements:
 - pip install openai-whisper
 - FFmpeg installed and in PATH (for video files)
-- CUDA-enabled PyTorch for GPU acceleration (optional but recommended)
+
+Current Status: CPU-only processing
+TODO: GPU acceleration (CUDA compatibility issues under investigation)
 """
 
 import sys
@@ -104,8 +106,9 @@ def transcribe_file(file_path):
     if not check_dependencies():
         return False
 
-    # Force CPU mode for stability
-    print("ℹ Using CPU mode for optimal stability")
+    # Force CPU mode - GPU acceleration disabled due to compatibility issues
+    print("ℹ Using CPU-only mode for stability")
+    print("  TODO: Investigate GPU acceleration compatibility issues")
     device = "cpu"
 
     # Load Whisper model
@@ -180,8 +183,11 @@ def main():
 
     args = parser.parse_args()
 
-    print("🎵 Whisper Transcription Tool")
-    print("=" * 40)
+    print("🎵 Whisper Transcription Tool (CPU Version)")
+    print("=" * 50)
+    print("Current mode: CPU-only processing")
+    print("Performance: Moderate speed, high compatibility")
+    print("=" * 50)
 
     success_count = 0
     total_files = len(args.files)
