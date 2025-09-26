@@ -4,8 +4,8 @@ Whisper Transcription Script (CPU Version)
 Drag and drop audio/video files onto this script to generate transcripts.
 
 Outputs:
-- filename_transcript.srt (with timestamps for video players)
-- filename_transcript.md (clean markdown format)
+- filename.srt (with timestamps for video players)
+- filename.md (clean markdown format)
 
 Requirements:
 - pip install openai-whisper
@@ -155,12 +155,12 @@ def transcribe_file(file_path):
     output_dir = file_path.parent
 
     # SRT file with timestamps
-    srt_path = output_dir / f"{base_name}_transcript.srt"
+    srt_path = output_dir / f"{base_name}.srt"
     print(f"📝 Generating SRT: {srt_path.name}")
     generate_srt(result['segments'], srt_path)
 
     # Markdown file with clean text
-    md_path = output_dir / f"{base_name}_transcript.md"
+    md_path = output_dir / f"{base_name}.md"
     print(f"📝 Generating Markdown: {md_path.name}")
     generate_markdown(result['segments'], md_path, file_path.name)
 
