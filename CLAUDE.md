@@ -1,4 +1,6 @@
-# Whisper Transcription Tool - LLM Context
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 A drag-and-drop Whisper transcription tool optimized for mixed Cantonese/English audio with Traditional Chinese output.
@@ -136,21 +138,51 @@ model.transcribe(
 - **medium**: Tested, sometimes better for mixed languages but lower accuracy
 - **base**: Faster but significantly lower quality for Cantonese
 
+## Development Setup
+
+### Project Management
+- **Dependency Manager**: Poetry (see `pyproject.toml`)
+- **Python Version**: 3.13+ (or 3.8+)
+
+### Common Commands
+```bash
+# Install dependencies
+poetry install
+
+# Run transcription
+poetry run python transcribe.py audio.mp4
+
+# Show dependency tree
+poetry show --tree
+
+# Configure in-project virtualenv
+poetry config virtualenvs.in-project true
+
+# Activate shell
+poetry shell
+```
+
+### System Requirements
+- **FFmpeg** must be installed system-wide (not through Poetry)
+  - macOS: `brew install ffmpeg`
+  - Linux: `sudo apt install ffmpeg`
+  - Windows: Download from ffmpeg.org or use Chocolatey
+
 ## File Structure & Architecture
 
 ### Core Files
-- `transcribe.py` - Main transcription script
-- `setup.bat` - Installation script
-- `check_cuda.py` - CUDA diagnostic tool
+- `transcribe.py` - Main transcription script with CLI interface
+- `pyproject.toml` - Poetry dependency configuration
+- `poetry.lock` - Locked dependency versions
 
 ### Output Format
-- `*_transcript.srt` - Timestamped subtitles
-- `*_transcript.md` - Clean markdown format
+- `filename.srt` - Timestamped subtitles (SRT format)
+- `filename.md` - Clean markdown transcript
 
-### Dependencies
-- `openai-whisper` - Core transcription
-- `torch` (CPU version) - PyTorch backend
-- `ffmpeg` - Audio/video processing
+### Key Dependencies
+- `openai-whisper` - Core transcription engine
+- `torch` - PyTorch backend (CPU-only currently)
+- `ffmpeg` - System binary for audio/video processing (not Python package)
 
 ## Performance Benchmarks
 
