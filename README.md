@@ -1,6 +1,6 @@
 # Whisper Transcription Tool
 
-A simple drag-and-drop tool for transcribing audio and video files using OpenAI Whisper, optimized for mixed Cantonese/English content.
+A drag-and-drop tool for transcribing audio and video files using OpenAI Whisper, optimized for mixed Cantonese/English content.
 
 ## Features
 
@@ -10,55 +10,90 @@ A simple drag-and-drop tool for transcribing audio and video files using OpenAI 
 - 📝 **Dual Output**: Generates both SRT subtitles and clean markdown
 - ⚡ **CPU Processing**: Reliable, compatible operation
 
-## Quick Start (on Windows)
+## Quick Start
 
-1. **Install**: Run `setup.bat`
-2. **Use**: Drag audio/video files onto `transcribe.py`
-3. **Get Results**: Find `*_transcript.srt` and `*_transcript.md` files
+### Prerequisites
 
-## Requirements
+1. **Python 3.13+** (or 3.8+)
+2. **Poetry** for dependency management
+3. **FFmpeg** for audio/video processing
 
-- Python 3.8+
-- FFmpeg (for video files)
-- Windows (batch scripts)
-
-## Installation
+### Installation
 
 ```bash
-# Run the setup script
-setup.bat
+# 1. Install FFmpeg (system-wide)
+# macOS
+brew install ffmpeg
 
-# Or install manually
-pip install openai-whisper
-# Ensure FFmpeg is in PATH
+# Ubuntu/Debian
+sudo apt install ffmpeg
+
+# Windows (using Chocolatey)
+choco install ffmpeg
+
+# 2. Install Poetry (if not already installed)
+curl -sSL https://install.python-poetry.org | python3 -
+
+# 3. Install project dependencies
+poetry install
+
+# 4. (Optional) Configure Poetry to create virtualenv in project directory
+poetry config virtualenvs.in-project true
 ```
 
-## Usage
+### Usage
 
-### Drag & Drop (Recommended)
-1. Drag your audio/video file onto `transcribe.py`
-2. Wait for processing to complete
-3. Find output files in the same directory
-
-### Command Line
 ```bash
+# Drag & Drop (Windows/macOS)
+# Simply drag your audio/video file onto transcribe.py
+
+# Command Line
+poetry run python transcribe.py your_audio_file.mp4
+
+# Or activate the virtual environment first
+poetry shell
 python transcribe.py your_audio_file.mp4
+```
+
+## Common Commands
+
+```bash
+# Install dependencies
+poetry install
+
+# Install without development dependencies
+poetry install --only main
+
+# Show dependency tree
+poetry show --tree
+
+# Update dependencies
+poetry update
+
+# Add new dependency
+poetry add package-name
+
+# Activate virtual environment
+poetry shell
+
+# Run script without activating environment
+poetry run python transcribe.py audio.mp4
 ```
 
 ## Output Files
 
-- **`filename_transcript.srt`** - Timestamped subtitles for video players
-- **`filename_transcript.md`** - Clean markdown transcript for reading
+- **`filename.srt`** - Timestamped subtitles for video players
+- **`filename.md`** - Clean markdown transcript for reading
 
 ## Supported Formats
 
 - **Audio**: MP3, WAV, M4A, FLAC, etc.
-- **Video**: MP4, AVI, MOV, MKV, etc. (audio will be extracted)
+- **Video**: MP4, AVI, MOV, MKV, etc. (audio extracted automatically)
 
 ## Performance
 
 - **Current Mode**: CPU-only processing
-- **Speed**: Moderate (good for personal use)
+- **Speed**: ~90-200 frames/s on i7-12700 (moderate but stable)
 - **Quality**: High accuracy for Cantonese content
 - **Memory**: ~2GB RAM usage
 
@@ -70,36 +105,47 @@ This tool is specifically tuned for:
 - **Traditional Chinese output** (when applicable)
 - **Meeting recordings** and casual conversations
 
-## Limitations
+### Language Settings Trade-off
 
-- CPU-only processing (moderate speed)
-- No real-time transcription
-- No speaker identification
-- Windows-focused setup
+The tool uses `language="zh"` (Chinese) which provides:
+- ✅ Best transcription accuracy
+- ✅ Good mixed language handling
+- ❌ More formal/written language style
 
-## Troubleshooting
-
-### Common Issues
-
-**"FFmpeg not found"**
-- Install FFmpeg and ensure it's in your system PATH
-- Download from: https://ffmpeg.org/download.html
-
-**Slow processing**
-- This is expected in CPU mode
-- Processing time depends on audio length and CPU performance
-
-**Poor transcription quality**
-- Ensure audio is clear and not too noisy
-- Works best with conversational speech
-- Very quiet or heavily accented audio may have issues
+Alternative `language="yue"` (Cantonese) would provide:
+- ✅ Better colloquial expression preservation
+- ❌ Lower overall accuracy
+- ❌ Occasional English translation instead of transcription
 
 ## Technical Details
 
 - **Engine**: OpenAI Whisper (large model)
-- **Language Settings**: Optimized for mixed content (`zh` language code with Cantonese prompts)
 - **Processing**: CPU-only for compatibility
+- **Transcription Settings**: Optimized for colloquial speech and mixed languages
 - **Output Encoding**: UTF-8 for proper Chinese character support
+
+## Known Limitations
+
+- CPU-only processing (GPU acceleration disabled due to CUDA compatibility issues)
+- No real-time transcription
+- No speaker identification/diarization
+- Mixed Simplified/Traditional Chinese characters in output
+
+## Troubleshooting
+
+### "FFmpeg not found"
+Install FFmpeg and ensure it's in your system PATH:
+- macOS: `brew install ffmpeg`
+- Linux: `sudo apt install ffmpeg`
+- Windows: Download from https://ffmpeg.org/download.html
+
+### Slow processing
+This is expected in CPU mode. Processing time depends on audio length and CPU performance.
+
+### Poor transcription quality
+- Ensure audio is clear and not too noisy
+- Works best with conversational speech at normal volume
+- Very quiet or heavily accented audio may have issues
 
 ## Future Improvements
 
@@ -111,17 +157,6 @@ This tool is specifically tuned for:
 
 This is a personal tool, but suggestions and improvements are welcome!
 
-## Known Issues
+## License
 
-- **GPU acceleration currently disabled** due to CUDA library compatibility issues
-- **Language trade-off**: Choice between accuracy (`zh`) vs colloquial authenticity (`yue`)
-- **Mixed character sets**: Output may contain both Simplified and Traditional Chinese (not critical)
-- **Formal language bias**: Tends toward written style rather than spoken Cantonese
-
-## Version History
-
-- **v1.0**: Initial CPU-only release with Cantonese optimization
-
----
-
-**Note**: This tool prioritizes transcription quality and reliability over speed. GPU acceleration is planned for future releases.
+MIT
